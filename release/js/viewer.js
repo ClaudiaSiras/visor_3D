@@ -11,6 +11,7 @@ const Viewer = (function() {
     let originalMaterials = new Map();
     let isWireframeEnabled = false;
     let isEmissiveMode = false;
+    let isTextureGray = false;
     let isLightEnabled = true;
     let lightIntensity = 1.0;
     let lightAzimuth = 45;
@@ -108,6 +109,7 @@ const Viewer = (function() {
                     // Reset state
                     isWireframeEnabled = false;
                     isEmissiveMode = false;
+                    isTextureGray = false;
                     originalMaterials.clear();
                     wireframeMesh = null;
 
@@ -229,17 +231,23 @@ const Viewer = (function() {
     function toggleTexture() {
         if (!currentModel) return;
 
+        isTextureGray = !isTextureGray;
+
         currentModel.traverse(function(child) {
             if (child.isMesh) {
                 const originalMat = originalMaterials.get(child.uuid);
                 if (!originalMat) return;
 
-                if (originalMat.map) {
-                    // Has texture - switch to gray
-                    const grayMat = new THREE.MeshStandardMaterial({ color: 0x808080 });
+                if (isTextureGray) {
+                    // Switch to gray material (maintain roughness/metalness if present)
+                    const grayMat = new THREE.MeshStandardMaterial({
+                        color: 0x808080,
+                        roughness: originalMat.roughness !== undefined ? originalMat.roughness : 0.8,
+                        metalness: originalMat.metalness !== undefined ? originalMat.metalness : 0
+                    });
                     child.material = grayMat;
                 } else {
-                    // No texture - restore original
+                    // Restore original material
                     child.material = originalMat;
                 }
             }

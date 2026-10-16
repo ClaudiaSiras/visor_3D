@@ -93,7 +93,7 @@ body {
 /* Viewer Container */
 .viewer-container {
     grid-area: viewer;
-    background: #0a0a1a;
+    background: #f0f0f0;
     border-radius: 8px;
     position: relative;
     overflow: hidden;
