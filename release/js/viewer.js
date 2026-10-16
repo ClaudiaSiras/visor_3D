@@ -33,7 +33,7 @@ const Viewer = (function() {
 
         // Scene
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a1a);
+        scene.background = new THREE.Color(0xf0f0f0);
 
         // Camera
         const aspect = container.clientWidth / container.clientHeight;
