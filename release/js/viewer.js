@@ -8,6 +8,7 @@ const Viewer = (function() {
     let currentModel = null;
     let wireframeMesh = null;
     let directionalLight;
+    let ambientLight;
     let originalMaterials = new Map();
     let isWireframeEnabled = false;
     let isEmissiveMode = false;
@@ -18,6 +19,10 @@ const Viewer = (function() {
     let lightElevation = 45;
     let originalCameraPosition = null;
     let originalCameraTarget = null;
+    
+    // LightingSettings (session state, applied once at init and not reset on loadModel)
+    let ambientIntensity = 50; // 0-100, default 50
+    let shadowsEnabled = true; // default ON
 
     const MIN_ZOOM = 0.5;
     const MAX_ZOOM = 5.0;
@@ -45,13 +50,44 @@ const Viewer = (function() {
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = shadowsEnabled;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
         container.appendChild(renderer.domElement);
 
+        // Environment map
+        try {
+            if (typeof THREE.PMREMGenerator !== 'undefined' && typeof THREE.RoomEnvironment !== 'undefined') {
+                var pmremGenerator = new THREE.PMREMGenerator(renderer);
+                pmremGenerator.compileEquirectangularShader();
+                var envTexture = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+                scene.environment = envTexture;
+                pmremGenerator.dispose();
+            } else {
+                console.warn('RoomEnvironment/PMREMGenerator not available; continuing without environment map');
+            }
+        } catch (e) {
+            console.warn('Failed to build environment map:', e);
+        }
+
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+        ambientLight = new THREE.AmbientLight(0xffffff, ambientIntensity / 100);
         scene.add(ambientLight);
 
         directionalLight = new THREE.DirectionalLight(0xffffff, lightIntensity);
+        directionalLight.castShadow = shadowsEnabled;
+        directionalLight.shadow.mapSize.width = (typeof window !== 'undefined' && window.innerWidth < 768) ? 512 : 1024;
+        directionalLight.shadow.mapSize.height = directionalLight.shadow.mapSize.width;
+        directionalLight.shadow.bias = -0.0005;
+        directionalLight.shadow.normalBias = 0.02;
+        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.far = 50;
+        directionalLight.shadow.camera.left = -4;
+        directionalLight.shadow.camera.right = 4;
+        directionalLight.shadow.camera.top = 4;
+        directionalLight.shadow.camera.bottom = -4;
         updateLightPosition();
         scene.add(directionalLight);
 
@@ -121,6 +157,14 @@ const Viewer = (function() {
                         if (child.isLight) {
                             child.intensity = 0;
                             child.visible = false;
+                        }
+                    });
+
+                    // Enable shadows on all meshes
+                    currentModel.traverse(function(child) {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
                         }
                     });
 
@@ -287,7 +331,9 @@ const Viewer = (function() {
      */
     function toggleLight() {
         isLightEnabled = !isLightEnabled;
-        directionalLight.intensity = isLightEnabled ? lightIntensity : 0;
+        if (directionalLight) {
+            directionalLight.intensity = isLightEnabled ? lightIntensity : 0;
+        }
     }
 
     /**
@@ -295,8 +341,44 @@ const Viewer = (function() {
      */
     function setLightIntensity(value) {
         lightIntensity = value / 100;
-        if (isLightEnabled) {
+        if (isLightEnabled && directionalLight) {
             directionalLight.intensity = lightIntensity;
+        }
+    }
+
+    /**
+     * Set ambient light intensity (0-100%)
+     */
+    function setAmbientIntensity(value) {
+        const clamped = Math.max(0, Math.min(100, parseInt(value, 10) || 0));
+        ambientIntensity = clamped;
+        if (ambientLight) {
+            ambientLight.intensity = ambientIntensity / 100;
+        }
+    }
+
+    /**
+     * Set shadows enabled/disabled
+     */
+    function setShadowsEnabled(enabled) {
+        shadowsEnabled = !!enabled;
+        if (directionalLight) {
+            directionalLight.castShadow = shadowsEnabled;
+        }
+        if (renderer) {
+            renderer.shadowMap.enabled = shadowsEnabled;
+            renderer.shadowMap.needsUpdate = true;
+        }
+        if (currentModel) {
+            currentModel.traverse(function(child) {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(function(m) { m.needsUpdate = true; });
+                    } else {
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
         }
     }
 
@@ -471,6 +553,8 @@ const Viewer = (function() {
         toggleEmissive,
         toggleLight,
         setLightIntensity,
+        setAmbientIntensity,
+        setShadowsEnabled,
         setLightPosition,
         resetCamera,
         getZoomLevel,

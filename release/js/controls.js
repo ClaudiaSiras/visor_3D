@@ -25,16 +25,49 @@ const Controls = (function() {
         });
 
         // Light controls
-        document.getElementById('btn-light').addEventListener('click', function() {
-            Viewer.toggleLight();
-            this.classList.toggle('active');
-        });
+        var btnLight = document.getElementById('btn-light');
+        if (btnLight) {
+            btnLight.addEventListener('click', function() {
+                Viewer.toggleLight();
+                this.classList.toggle('active');
+            });
+        }
 
-        document.getElementById('light-intensity').addEventListener('input', function() {
-            const value = parseInt(this.value);
-            document.getElementById('light-intensity-val').textContent = value;
-            Viewer.setLightIntensity(value);
-        });
+        var lightIntensitySlider = document.getElementById('light-intensity');
+        if (lightIntensitySlider) {
+            lightIntensitySlider.addEventListener('input', function() {
+                const value = parseInt(this.value);
+                var lightIntensityVal = document.getElementById('light-intensity-val');
+                if (lightIntensityVal) lightIntensityVal.textContent = value;
+                Viewer.setLightIntensity(value);
+            });
+        }
+
+        var lightAmbientSlider = document.getElementById('light-ambient');
+        if (lightAmbientSlider) {
+            lightAmbientSlider.addEventListener('input', function() {
+                const value = parseInt(this.value);
+                var lightAmbientVal = document.getElementById('light-ambient-val');
+                if (lightAmbientVal) lightAmbientVal.textContent = value;
+                Viewer.setAmbientIntensity(value);
+            });
+        }
+
+        var btnShadows = document.getElementById('btn-shadows');
+        if (btnShadows) {
+            btnShadows.addEventListener('click', function() {
+                var isActive = this.classList.contains('active');
+                if (isActive) {
+                    this.classList.remove('active');
+                    this.setAttribute('aria-pressed', 'false');
+                    Viewer.setShadowsEnabled(false);
+                } else {
+                    this.classList.add('active');
+                    this.setAttribute('aria-pressed', 'true');
+                    Viewer.setShadowsEnabled(true);
+                }
+            });
+        }
 
         document.getElementById('light-position-h').addEventListener('input', function() {
             const value = parseInt(this.value);

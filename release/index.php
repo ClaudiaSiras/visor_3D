@@ -34,6 +34,10 @@
                     <input type="range" id="light-intensity" min="0" max="100" value="100">
                 </div>
                 <div class="slider-group">
+                    <label for="light-ambient">Ambient Light: <span id="light-ambient-val">50</span>%</label>
+                    <input type="range" id="light-ambient" min="0" max="100" value="50">
+                </div>
+                <div class="slider-group">
                     <label for="light-position-h">Position H: <span id="light-position-h-val">45</span>°</label>
                     <input type="range" id="light-position-h" min="0" max="360" value="45">
                 </div>
@@ -41,6 +45,7 @@
                     <label for="light-position-v">Position V: <span id="light-position-v-val">45</span>°</label>
                     <input type="range" id="light-position-v" min="0" max="90" value="45">
                 </div>
+                <button id="btn-shadows" class="control-btn active" aria-pressed="true">Shadows</button>
             </div>
 
             <div class="control-group">
@@ -75,6 +80,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 
     <!-- Application scripts -->
     <script src="js/viewer.js"></script>
