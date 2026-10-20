@@ -13,7 +13,6 @@ const Viewer = (function() {
     let isWireframeEnabled = false;
     let isEmissiveMode = false;
     let isTextureGray = false;
-    let isLightEnabled = true;
     let lightIntensity = 1.0;
     let lightAzimuth = 45;
     let lightElevation = 45;
@@ -188,6 +187,9 @@ const Viewer = (function() {
 
                     scene.add(currentModel);
 
+                    // Apply current ambient-driven environment intensity to the new model
+                    applyEnvironmentIntensity();
+
                     // Store original camera position
                     if (!originalCameraPosition) {
                         originalCameraPosition = camera.position.clone();
@@ -288,7 +290,8 @@ const Viewer = (function() {
                     const grayMat = new THREE.MeshStandardMaterial({
                         color: 0x808080,
                         roughness: originalMat.roughness !== undefined ? originalMat.roughness : 0.8,
-                        metalness: originalMat.metalness !== undefined ? originalMat.metalness : 0
+                        metalness: originalMat.metalness !== undefined ? originalMat.metalness : 0,
+                        envMapIntensity: ambientIntensity / 100
                     });
                     child.material = grayMat;
                 } else {
@@ -328,23 +331,40 @@ const Viewer = (function() {
     }
 
     /**
-     * Toggle light on/off
-     */
-    function toggleLight() {
-        isLightEnabled = !isLightEnabled;
-        if (directionalLight) {
-            directionalLight.intensity = isLightEnabled ? lightIntensity : 0;
-        }
-    }
-
-    /**
      * Set light intensity (0-100%)
      */
     function setLightIntensity(value) {
         lightIntensity = value / 100;
-        if (isLightEnabled && directionalLight) {
+        if (directionalLight) {
             directionalLight.intensity = lightIntensity;
         }
+    }
+
+    /**
+     * Scale the environment-map (IBL) contribution with the ambient level so
+     * Ambient 0% + Intensity 0% renders the model dark, while keeping the
+     * reflections that make rough/polished materials readable (FR-007).
+     */
+    function applyEnvironmentIntensity() {
+        if (!currentModel) return;
+        const factor = ambientIntensity / 100;
+
+        function applyTo(mat) {
+            if (mat && typeof mat.envMapIntensity === 'number') {
+                mat.envMapIntensity = factor;
+            }
+        }
+
+        // Current (possibly swapped) materials
+        currentModel.traverse(function(child) {
+            if (child.isMesh && child.material) {
+                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                materials.forEach(applyTo);
+            }
+        });
+
+        // Stored originals, so restoring gray/emissive modes keeps the right level
+        originalMaterials.forEach(applyTo);
     }
 
     /**
@@ -357,6 +377,7 @@ const Viewer = (function() {
             ambientLight.intensity = ambientIntensity / 100;
             ambientLight.visible = true;
         }
+        applyEnvironmentIntensity();
     }
 
     /**
@@ -562,7 +583,6 @@ const Viewer = (function() {
         toggleWireframe,
         toggleTexture,
         toggleEmissive,
-        toggleLight,
         setLightIntensity,
         setAmbientIntensity,
         setShadowsEnabled,

@@ -36,7 +36,6 @@ $ASSET_V = urlencode($BUILD_SHOWN);
 
             <div class="control-group">
                 <h3>Lighting</h3>
-                <button id="btn-light" class="control-btn">light</button>
                 <div class="slider-group">
                     <label for="light-intensity">Intensity: <span id="light-intensity-val">100</span>%</label>
                     <input type="range" id="light-intensity" min="0" max="100" value="100">

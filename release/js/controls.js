@@ -25,14 +25,6 @@ const Controls = (function() {
         });
 
         // Light controls
-        var btnLight = document.getElementById('btn-light');
-        if (btnLight) {
-            btnLight.addEventListener('click', function() {
-                Viewer.toggleLight();
-                this.classList.toggle('active');
-            });
-        }
-
         var lightIntensitySlider = document.getElementById('light-intensity');
         if (lightIntensitySlider) {
             lightIntensitySlider.addEventListener('input', function() {
