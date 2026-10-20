@@ -1,10 +1,18 @@
 <!DOCTYPE html>
+<?php
+// Build stamp — replaced automatically by CI before FTP deploy (see .github/workflows/deploy.yml)
+$BUILD = '__BUILD__';
+$BUILD_DATE = '__BUILD_DATE__';
+$BUILD_SHOWN = ($BUILD === '__BUILD__') ? 'local' : $BUILD;
+$BUILD_DATE_SHOWN = ($BUILD_DATE === '__BUILD_DATE__') ? 'local' : $BUILD_DATE;
+$ASSET_V = urlencode($BUILD_SHOWN);
+?>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visor 3D</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= $ASSET_V ?>">
 </head>
 <body>
     <div class="app-container">
@@ -83,8 +91,13 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 
     <!-- Application scripts -->
-    <script src="js/viewer.js"></script>
-    <script src="js/controls.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/viewer.js?v=<?= $ASSET_V ?>"></script>
+    <script src="js/controls.js?v=<?= $ASSET_V ?>"></script>
+    <script src="js/app.js?v=<?= $ASSET_V ?>"></script>
+
+    <!-- Build stamp: last master commit deployed to this FTP -->
+    <div class="version-badge" title="Deployed master build">
+        v0.2.0 · master · build <?= htmlspecialchars($BUILD_SHOWN) ?> · <?= htmlspecialchars($BUILD_DATE_SHOWN) ?>
+    </div>
 </body>
 </html>

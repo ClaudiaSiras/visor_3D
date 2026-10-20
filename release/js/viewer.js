@@ -88,6 +88,7 @@ const Viewer = (function() {
         directionalLight.shadow.camera.right = 5;
         directionalLight.shadow.camera.top = 5;
         directionalLight.shadow.camera.bottom = -5;
+        directionalLight.shadow.camera.updateProjectionMatrix();
         updateLightPosition();
         scene.add(directionalLight);
 

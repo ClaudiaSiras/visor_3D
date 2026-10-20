@@ -13,6 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Stamp build info into index.php
+        shell: bash
+        run: |
+          BUILD="$(git rev-parse --short HEAD)"
+          BUILD_DATE="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          sed -i "s/__BUILD__/${BUILD}/g; s/__BUILD_DATE__/${BUILD_DATE}/g" release/index.php
+          grep -n "version-badge" release/index.php || { echo "Build stamp not applied"; exit 1; }
+
       - name: Deploy to InfinityFree via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
