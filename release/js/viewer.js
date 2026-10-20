@@ -80,14 +80,14 @@ const Viewer = (function() {
         directionalLight.castShadow = shadowsEnabled;
         directionalLight.shadow.mapSize.width = (typeof window !== 'undefined' && window.innerWidth < 768) ? 512 : 1024;
         directionalLight.shadow.mapSize.height = directionalLight.shadow.mapSize.width;
-        directionalLight.shadow.bias = -0.0005;
-        directionalLight.shadow.normalBias = 0.02;
+        directionalLight.shadow.bias = -0.00001;
+        directionalLight.shadow.normalBias = 0.01;
         directionalLight.shadow.camera.near = 0.1;
-        directionalLight.shadow.camera.far = 50;
-        directionalLight.shadow.camera.left = -4;
-        directionalLight.shadow.camera.right = 4;
-        directionalLight.shadow.camera.top = 4;
-        directionalLight.shadow.camera.bottom = -4;
+        directionalLight.shadow.camera.far = 100;
+        directionalLight.shadow.camera.left = -5;
+        directionalLight.shadow.camera.right = 5;
+        directionalLight.shadow.camera.top = 5;
+        directionalLight.shadow.camera.bottom = -5;
         updateLightPosition();
         scene.add(directionalLight);
 
@@ -163,8 +163,8 @@ const Viewer = (function() {
                     // Enable shadows on all meshes
                     currentModel.traverse(function(child) {
                         if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
+                            child.castShadow = shadowsEnabled;
+                            child.receiveShadow = shadowsEnabled;
                         }
                     });
 
@@ -354,6 +354,7 @@ const Viewer = (function() {
         ambientIntensity = clamped;
         if (ambientLight) {
             ambientLight.intensity = ambientIntensity / 100;
+            ambientLight.visible = true;
         }
     }
 
@@ -364,18 +365,27 @@ const Viewer = (function() {
         shadowsEnabled = !!enabled;
         if (directionalLight) {
             directionalLight.castShadow = shadowsEnabled;
+            if (directionalLight.shadow) {
+                directionalLight.shadow.needsUpdate = true;
+            }
         }
         if (renderer) {
-            renderer.shadowMap.enabled = shadowsEnabled;
-            renderer.shadowMap.needsUpdate = true;
+            renderer.shadowMap.enabled = true;
+            if (renderer.shadowMap) {
+                renderer.shadowMap.needsUpdate = true;
+            }
         }
         if (currentModel) {
             currentModel.traverse(function(child) {
-                if (child.isMesh && child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(function(m) { m.needsUpdate = true; });
-                    } else {
-                        child.material.needsUpdate = true;
+                if (child.isMesh) {
+                    child.castShadow = shadowsEnabled;
+                    child.receiveShadow = shadowsEnabled;
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(function(m) { m.needsUpdate = true; });
+                        } else {
+                            child.material.needsUpdate = true;
+                        }
                     }
                 }
             });

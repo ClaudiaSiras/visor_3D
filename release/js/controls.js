@@ -46,7 +46,13 @@ const Controls = (function() {
         var lightAmbientSlider = document.getElementById('light-ambient');
         if (lightAmbientSlider) {
             lightAmbientSlider.addEventListener('input', function() {
-                const value = parseInt(this.value);
+                const value = parseInt(this.value, 10);
+                var lightAmbientVal = document.getElementById('light-ambient-val');
+                if (lightAmbientVal) lightAmbientVal.textContent = value;
+                Viewer.setAmbientIntensity(value);
+            });
+            lightAmbientSlider.addEventListener('change', function() {
+                const value = parseInt(this.value, 10);
                 var lightAmbientVal = document.getElementById('light-ambient-val');
                 if (lightAmbientVal) lightAmbientVal.textContent = value;
                 Viewer.setAmbientIntensity(value);
